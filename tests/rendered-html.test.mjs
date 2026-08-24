@@ -21,6 +21,8 @@ test("server-renders the MNY trade explorer", async () => {
   assert.match(html, /Kyle · Vandelay Industries/i);
   assert.match(html, />Cash</i);
   assert.match(html, />August</i);
+  assert.match(html, /Export Excel/i);
+  assert.match(html, /Export JSON/i);
   assert.doesNotMatch(html, /Every deal|One ledger|Trade explorer|THE LEAGUE ARCHIVE/i);
   assert.doesNotMatch(html, /codex-preview|SkeletonPreview|Your site is taking shape/i);
 });

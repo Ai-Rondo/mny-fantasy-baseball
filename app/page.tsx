@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import trades from "./trades.json";
+import { exportExcel, exportJson } from "./exports";
 
 const months = ["All months","January","February","March","April","May","June","July","August","September","October","November","December"];
 const quickFilters = [{id:"all",label:"All"},{id:"cash",label:"Cash"},{id:"picks",label:"Draft picks"},{id:"august",label:"August"}];
@@ -52,7 +53,7 @@ export default function Home() {
         <label className="search">Player or asset<input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search…"/></label>
         <div className="pills" aria-label="Trade type">{quickFilters.map(item=><button key={item.id} className={quick===item.id?"active":""} onClick={()=>setQuick(item.id)}>{item.label}</button>)}</div>
       </div>
-      <div className="results"><p><strong>{filtered.length}</strong> trades</p>{(year!=="all"||month!=="all"||team!=="0"||quick!=="all"||query)&&<button onClick={clear}>Clear filters</button>}</div>
+      <div className="results"><p><strong>{filtered.length}</strong> trades</p><div className="result-actions">{(year!=="all"||month!=="all"||team!=="0"||quick!=="all"||query)&&<button onClick={clear}>Clear filters</button>}<button onClick={()=>exportExcel(filtered)}>Export Excel</button><button onClick={()=>exportJson(filtered)}>Export JSON</button></div></div>
       <div className="trade-grid">{filtered.map(trade=><article className="trade-card" key={trade.id}>
         <div className="trade-meta"><time dateTime={trade.date}>{new Date(`${trade.date}T12:00:00`).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</time><span>{trade.august?"August":trade.cash?"Cash":trade.picks?"Picks":"Players"}</span></div>
         <div className="side"><h2>{trade.partyA}</h2><div className="assets"><AssetList text={trade.sendsA}/></div></div>
