@@ -1,0 +1,2 @@
+.leaderboard-page{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}.standing-card{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}.standing-head{padding:17px 18px;border-bottom:1px solid var(--line)}.standing-head h2{margin:0;font-size:18px}.standing-head p{margin:4px 0 0;color:var(--muted);font-size:10px}
+@media(max-width:850px){.leaderboard-page{grid-template-columns:1fr}}

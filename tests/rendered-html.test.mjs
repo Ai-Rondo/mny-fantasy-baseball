@@ -23,6 +23,7 @@ test("server-renders the MNY trade explorer", async () => {
   assert.match(html, /Export Excel/i);
   assert.match(html, /Export JSON/i);
   assert.match(html, />Roasts</i);
+  assert.match(html, />Leaderboard</i);
   assert.match(html, />Vote</i);
   assert.doesNotMatch(html, /Lock choice/i);
   assert.doesNotMatch(html, /Who won\?/i);
