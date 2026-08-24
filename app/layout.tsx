@@ -20,15 +20,15 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
   },
   openGraph: {
-    title: "MNY Fantasy Baseball",
-    description: "Every deal. One ledger.",
-    images: [{ url: "/og.png", width: 1733, height: 908, alt: "MNY Fantasy Baseball — Every deal. One ledger." }],
+    title: "MNY Fantasy Baseball Trade Ledger",
+    description: "League trade history",
+    images: [{ url: "/og-v2.png", width: 1731, height: 909, alt: "Trade Ledger" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "MNY Fantasy Baseball",
-    description: "Every deal. One ledger.",
-    images: ["/og.png"],
+    title: "MNY Fantasy Baseball Trade Ledger",
+    description: "League trade history",
+    images: ["/og-v2.png"],
   },
 };
 

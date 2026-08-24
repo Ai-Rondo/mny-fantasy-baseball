@@ -16,10 +16,12 @@ test("server-renders the MNY trade explorer", async () => {
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
   assert.match(html, /MNY Fantasy Baseball Trade Ledger/i);
-  assert.match(html, /Every deal/i);
-  assert.match(html, /Trade explorer/i);
-  assert.match(html, /Cash involved/i);
-  assert.match(html, /August deadline/i);
+  assert.match(html, /Trade Ledger/i);
+  assert.match(html, /All teams/i);
+  assert.match(html, /Kyle · Vandelay Industries/i);
+  assert.match(html, />Cash</i);
+  assert.match(html, />August</i);
+  assert.doesNotMatch(html, /Every deal|One ledger|Trade explorer|THE LEAGUE ARCHIVE/i);
   assert.doesNotMatch(html, /codex-preview|SkeletonPreview|Your site is taking shape/i);
 });
 
@@ -27,6 +29,6 @@ test("includes complete trade data and social metadata", async () => {
   const response = await render();
   const html = await response.text();
   assert.match(html, />49</);
-  assert.match(html, /mny-fantasy-baseball\.pages\.dev\/og\.png/i);
+  assert.match(html, /mny-fantasy-baseball\.pages\.dev\/og-v2\.png/i);
   assert.match(html, /summary_large_image/i);
 });

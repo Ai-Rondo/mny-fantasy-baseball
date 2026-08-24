@@ -4,36 +4,62 @@ import { useMemo, useState } from "react";
 import trades from "./trades.json";
 
 const months = ["All months","January","February","March","April","May","June","July","August","September","October","November","December"];
-const quickFilters = [{id:"all",label:"All trades"},{id:"cash",label:"Cash involved"},{id:"picks",label:"Draft picks"},{id:"august",label:"August deadline"}];
-const currentOwners = [
-  ["Vandelay Industries","Kyle Gilkey"],["Benge Drinker","Jon Benge"],["Honey Nut Churios","Benjamin Sorace"],["Cin City 69ers","Jeff Cleek"],
-  ["Tanner Houck Tuah","Austin Gretencord"],["The Voey Jottos","Ryan Penrod"],["The Injured List","Jason Penrod"],["I Schlitt my pants","Ron Cipriano"],
-  ["VIPBenchWarm…","Jose Perez"],["Preller's Pentho…","Michael Alvarado"],["Way She Goes","Matt Witmer"],["Show Me Your Tatis","Juan Barrera"],
+const quickFilters = [{id:"all",label:"All"},{id:"cash",label:"Cash"},{id:"picks",label:"Draft picks"},{id:"august",label:"August"}];
+const teamFilters = [
+  {label:"All teams",terms:[]},
+  {label:"Kyle · Vandelay Industries",terms:["kyle gilkey","vandelay"]},
+  {label:"Jon · Benge Drinker",terms:["jon benge","benge drinker","bengedrinker"]},
+  {label:"Ben · Honey Nut Churios",terms:["ben sorace","benjamin sorace","honey nut"]},
+  {label:"Jeff · Cin City 69ers",terms:["jeff cleek","cin city"]},
+  {label:"Austin · Tanner Houck Tuah",terms:["austin gretencord","tanner houck"]},
+  {label:"Ryan · The Voey Jottos",terms:["ryan penrod","voey jottos","voeyjottos"]},
+  {label:"Jason · The Injured List",terms:["jason bradley","jason penrod","bryzzoforever","injured list"]},
+  {label:"Ron · I Schlitt My Pants",terms:["ron cipriano","casas sucks"]},
+  {label:"Jose · VIPBenchWarm…",terms:["jose perez","vipbench"]},
+  {label:"Michael · Preller's Pentho…",terms:["michael alvarado","preller"]},
+  {label:"Matt · Way She Goes",terms:["oandw redd","matt /","matt witmer","way she goes"]},
+  {label:"Juan · Show Me Your Tatis",terms:["juan barrera","show me your tatis"]},
 ];
 
-function AssetList({text}:{text:string}) { return <>{text.split(";").map(item=><span className="asset" key={item}>{item.trim()}</span>)}</>; }
+function AssetList({text}:{text:string}) {
+  return <>{text.split(";").map(item=><span className="asset" key={item}>{item.trim()}</span>)}</>;
+}
 
 export default function Home() {
-  const [year,setYear]=useState("all"), [month,setMonth]=useState("all"), [quick,setQuick]=useState("all"), [query,setQuery]=useState(""), [ownersOpen,setOwnersOpen]=useState(false);
+  const [year,setYear]=useState("all");
+  const [month,setMonth]=useState("all");
+  const [team,setTeam]=useState("0");
+  const [quick,setQuick]=useState("all");
+  const [query,setQuery]=useState("");
   const filtered=useMemo(()=>trades.filter(trade=>{
     const haystack=`${trade.partyA} ${trade.sendsA} ${trade.partyB} ${trade.sendsB}`.toLowerCase();
-    return (year==="all"||trade.year===Number(year))&&(month==="all"||trade.month===Number(month))
+    const selectedTeam=teamFilters[Number(team)];
+    return (year==="all"||trade.year===Number(year))
+      &&(month==="all"||trade.month===Number(month))
+      &&(!selectedTeam.terms.length||selectedTeam.terms.some(term=>haystack.includes(term)))
       &&(quick==="all"||(quick==="cash"&&trade.cash)||(quick==="picks"&&trade.picks)||(quick==="august"&&trade.august))
       &&(!query||haystack.includes(query.toLowerCase()));
-  }),[year,month,quick,query]);
-  const clear=()=>{setYear("all");setMonth("all");setQuick("all");setQuery("");};
-  return <main>
-    <header className="hero"><nav><a className="mark" href="#top" aria-label="MNY Fantasy Baseball home">MNY<span>FB</span></a><button onClick={()=>setOwnersOpen(!ownersOpen)}>2026 owners <span aria-hidden="true">↗</span></button></nav>
-      <div className="hero-copy" id="top"><p className="eyebrow">THE LEAGUE ARCHIVE · EST. 2024</p><h1>Every deal.<br/><em>One ledger.</em></h1><p className="dek">A searchable history of the trades that shaped Maybe Next Year Fantasy Baseball.</p>
-        <div className="scoreboard"><div><strong>{trades.length}</strong><span>Trades logged</span></div><div><strong>{trades.filter(t=>t.cash).length}</strong><span>Cash deals</span></div><div><strong>{trades.filter(t=>t.august).length}</strong><span>August deals</span></div></div></div><div className="baseball" aria-hidden="true"><span>TRADE</span></div></header>
-    {ownersOpen&&<section className="owners" aria-label="Current owner directory"><div className="section-head"><div><p className="eyebrow">CURRENT ALIGNMENT</p><h2>2026 owner directory</h2></div><button onClick={()=>setOwnersOpen(false)}>Close</button></div><div className="owner-grid">{currentOwners.map(([team,owner])=><div className="owner" key={team}><strong>{team}</strong><span>{owner}</span></div>)}</div><p className="owner-note">Team names change often. Historical trades retain the name used when the deal was posted.</p></section>}
-    <section className="explorer"><div className="section-head"><div><p className="eyebrow">TRANSACTION WIRE</p><h2>Trade explorer</h2></div><p className="result-count"><strong>{filtered.length}</strong> of {trades.length} deals</p></div>
-      <div className="filter-panel"><div className="search-wrap"><label htmlFor="search">Search owners, teams or players</label><input id="search" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Try Elly, Austin, 1st round…"/><span aria-hidden="true">⌕</span></div>
-        <div className="selects"><label>Season<select value={year} onChange={e=>setYear(e.target.value)}><option value="all">All years</option><option value="2025">2025</option><option value="2026">2026</option></select></label><label>Month<select value={month} onChange={e=>setMonth(e.target.value)}>{months.map((name,i)=><option value={i===0?"all":i} key={name}>{name}</option>)}</select></label></div>
-        <div className="pills" aria-label="Quick filters">{quickFilters.map(item=><button key={item.id} className={quick===item.id?"active":""} onClick={()=>setQuick(item.id)}>{item.label}</button>)}</div></div>
-      <div className="trade-list">{filtered.map(trade=><article className="trade-card" key={trade.id}><div className="trade-meta"><time dateTime={trade.date}>{new Date(`${trade.date}T12:00:00`).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</time><span>{trade.august?"Deadline deal":trade.cash?"Cash deal":trade.picks?"Draft capital":"Player swap"}</span><b>{trade.id}</b></div>
-        <div className="matchup"><div className="side"><p>SENDS</p><h3>{trade.partyA}</h3><div className="assets"><AssetList text={trade.sendsA}/></div></div><div className="swap" aria-label="traded with">⇄</div><div className="side"><p>SENDS</p><h3>{trade.partyB}</h3><div className="assets"><AssetList text={trade.sendsB}/></div></div></div></article>)}
-        {!filtered.length&&<div className="empty"><strong>No deals found.</strong><p>Try clearing a filter or searching a different player.</p><button onClick={clear}>Reset filters</button></div>}</div></section>
-    <footer><div className="mark">MNY<span>FB</span></div><p>Built from league chat records. Team names and ownership can change year to year.</p><a href="#top">Back to top ↑</a></footer>
+  }),[year,month,team,quick,query]);
+  const clear=()=>{setYear("all");setMonth("all");setTeam("0");setQuick("all");setQuery("");};
+
+  return <main id="top">
+    <header className="site-header"><div><h1>Trade Ledger</h1><p>{trades.length} recorded trades</p></div></header>
+    <section className="ledger">
+      <div className="filters">
+        <label>Team<select value={team} onChange={e=>setTeam(e.target.value)}>{teamFilters.map((item,i)=><option value={i} key={item.label}>{item.label}</option>)}</select></label>
+        <label>Year<select value={year} onChange={e=>setYear(e.target.value)}><option value="all">All years</option><option value="2025">2025</option><option value="2026">2026</option></select></label>
+        <label>Month<select value={month} onChange={e=>setMonth(e.target.value)}>{months.map((name,i)=><option value={i===0?"all":i} key={name}>{name}</option>)}</select></label>
+        <label className="search">Player or asset<input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search…"/></label>
+        <div className="pills" aria-label="Trade type">{quickFilters.map(item=><button key={item.id} className={quick===item.id?"active":""} onClick={()=>setQuick(item.id)}>{item.label}</button>)}</div>
+      </div>
+      <div className="results"><p><strong>{filtered.length}</strong> trades</p>{(year!=="all"||month!=="all"||team!=="0"||quick!=="all"||query)&&<button onClick={clear}>Clear filters</button>}</div>
+      <div className="trade-grid">{filtered.map(trade=><article className="trade-card" key={trade.id}>
+        <div className="trade-meta"><time dateTime={trade.date}>{new Date(`${trade.date}T12:00:00`).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</time><span>{trade.august?"August":trade.cash?"Cash":trade.picks?"Picks":"Players"}</span></div>
+        <div className="side"><h2>{trade.partyA}</h2><div className="assets"><AssetList text={trade.sendsA}/></div></div>
+        <div className="divider"><span>⇅</span></div>
+        <div className="side"><h2>{trade.partyB}</h2><div className="assets"><AssetList text={trade.sendsB}/></div></div>
+      </article>)}
+      {!filtered.length&&<div className="empty"><strong>No trades found</strong><button onClick={clear}>Clear filters</button></div>}</div>
+    </section>
   </main>;
 }
