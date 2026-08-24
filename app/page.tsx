@@ -28,12 +28,17 @@ function AssetList({text}:{text:string}) {
   return <>{text.split(";").map(item=><span className="asset" key={item}>{item.trim()}</span>)}</>;
 }
 
+function LeaderboardModal({kind,onClose,tradeRows,roastRows}:{kind:"trades"|"roasts";onClose:()=>void;tradeRows:Array<{name:string;average:number;votes:number}>;roastRows:Array<{name:string;given?:number;givenVotes:number;received?:number;receivedVotes:number}>}) {
+  return <div className="modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}><section className="leader-modal" role="dialog" aria-modal="true" aria-labelledby="leader-title"><div className="modal-head"><div><h2 id="leader-title">Leaderboard</h2><p>{kind==="trades"?"Average trade result · −10 to +10":"Average star ratings"}</p></div><button aria-label="Close leaderboard" onClick={onClose}>×</button></div>{kind==="trades"?<div className="leader-table"><div className="leader-row heading"><span>Owner</span><span>Score</span><span>Votes</span></div>{tradeRows.map((row,i)=><div className="leader-row" key={row.name}><span><b>{i+1}</b>{row.name}</span><strong className={row.average>0?"positive":row.average<0?"negative":""}>{row.average>0?"+":""}{row.average.toFixed(1)}</strong><span>{row.votes}</span></div>)}{!tradeRows.length&&<p className="no-ratings">No trade votes yet.</p>}</div>:<div className="leader-table roast-leader-table"><div className="leader-row heading"><span>Person</span><span>Roasts given</span><span>Times roasted</span></div>{roastRows.map((row,i)=><div className="leader-row" key={row.name}><span><b>{i+1}</b>{row.name}</span><strong>{row.given===undefined?"—":`${row.given.toFixed(1)} ★`}<small>{row.givenVotes?`${row.givenVotes} ratings`:""}</small></strong><strong>{row.received===undefined?"—":`${row.received.toFixed(1)} ★`}<small>{row.receivedVotes?`${row.receivedVotes} ratings`:""}</small></strong></div>)}{!roastRows.length&&<p className="no-ratings">No roast ratings yet.</p>}</div>}</section></div>;
+}
+
 export default function Home() {
   const [tradeVotes,setTradeVotes]=useState<VoteSummary>({});
   const [roastVotes,setRoastVotes]=useState<VoteSummary>({});
   const updateVotes=(data:unknown)=>{const payload=data as {trades?:Array<{id:string;average:number;votes:number}>;roasts?:Array<{id:string;average:number;votes:number}>};setTradeVotes(Object.fromEntries((payload.trades??[]).map(x=>[x.id,x])));setRoastVotes(Object.fromEntries((payload.roasts??[]).map(x=>[x.id,x])));};
   useEffect(()=>{fetch("/api/votes").then(r=>r.ok?r.json():Promise.reject()).then(updateVotes).catch(()=>{});},[]);
   const [tab,setTab]=useState<"trades"|"roasts">("trades");
+  const [leaderboard,setLeaderboard]=useState<"trades"|"roasts"|null>(null);
   const [year,setYear]=useState("all");
   const [month,setMonth]=useState("all");
   const [team,setTeam]=useState("0");
@@ -53,8 +58,8 @@ export default function Home() {
   const [roaster,setRoaster]=useState("all");
   const [roasted,setRoasted]=useState("all");
   const filteredRoasts=useMemo(()=>roasts.filter(item=>(roaster==="all"||item.roaster===roaster)&&(roasted==="all"||item.roasted===roasted)),[roaster,roasted]);
-  const tradeLeaders=useMemo(()=>{const scores=new Map<string,number[]>();for(const trade of trades){const vote=tradeVotes[trade.id];if(!vote)continue;for(const [name,score] of [[trade.partyA,-vote.average],[trade.partyB,vote.average]] as const)scores.set(name,[...(scores.get(name)??[]),score]);}return [...scores].map(([name,values])=>({name,average:values.reduce((a,b)=>a+b,0)/values.length,count:values.length})).sort((a,b)=>b.average-a.average).slice(0,5);},[tradeVotes]);
-  const roastLeaders=useMemo(()=>{const scores=new Map<string,{points:number;votes:number}>();for(const roast of roasts){const vote=roastVotes[roast.code];if(!vote)continue;const old=scores.get(roast.roaster)??{points:0,votes:0};scores.set(roast.roaster,{points:old.points+vote.average*vote.votes,votes:old.votes+vote.votes});}return [...scores].map(([name,x])=>({name,average:x.points/x.votes,votes:x.votes})).sort((a,b)=>b.average-a.average).slice(0,5);},[roastVotes]);
+  const tradeLeaders=useMemo(()=>{const scores=new Map<string,{points:number;votes:number}>();for(const trade of trades){const vote=tradeVotes[trade.id];if(!vote)continue;for(const [name,score] of [[trade.partyA,-vote.average],[trade.partyB,vote.average]] as const){const old=scores.get(name)??{points:0,votes:0};scores.set(name,{points:old.points+score*vote.votes,votes:old.votes+vote.votes});}}return [...scores].map(([name,x])=>({name,average:x.points/x.votes/10,votes:x.votes})).sort((a,b)=>b.average-a.average);},[tradeVotes]);
+  const roastLeaders=useMemo(()=>{const scores=new Map<string,{givenPoints:number;givenVotes:number;receivedPoints:number;receivedVotes:number}>();const get=(name:string)=>scores.get(name)??{givenPoints:0,givenVotes:0,receivedPoints:0,receivedVotes:0};for(const roast of roasts){const vote=roastVotes[roast.code];if(!vote)continue;const giver=get(roast.roaster);scores.set(roast.roaster,{...giver,givenPoints:giver.givenPoints+vote.average*vote.votes,givenVotes:giver.givenVotes+vote.votes});const target=get(roast.roasted);scores.set(roast.roasted,{...target,receivedPoints:target.receivedPoints+vote.average*vote.votes,receivedVotes:target.receivedVotes+vote.votes});}return [...scores].map(([name,x])=>({name,given:x.givenVotes?x.givenPoints/x.givenVotes:undefined,givenVotes:x.givenVotes,received:x.receivedVotes?x.receivedPoints/x.receivedVotes:undefined,receivedVotes:x.receivedVotes})).sort((a,b)=>(b.given??0)-(a.given??0));},[roastVotes]);
 
   return <main id="top">
     <header className="site-header"><div><h1>{tab==="trades"?"Trade Ledger":"Roasts"}</h1><p>{tab==="trades"?`${trades.length} recorded trades`:`${roasts.length} all-timers`}</p><nav className="tabs" aria-label="Site sections"><button className={tab==="trades"?"active":""} onClick={()=>setTab("trades")}>Trades</button><button className={tab==="roasts"?"active":""} onClick={()=>setTab("roasts")}>Roasts</button></nav></div></header>
@@ -66,8 +71,7 @@ export default function Home() {
         <label className="search">Player or asset<input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search…"/></label>
         <div className="pills" aria-label="Trade type">{quickFilters.map(item=><button key={item.id} className={quick===item.id?"active":""} onClick={()=>setQuick(item.id)}>{item.label}</button>)}</div>
       </div>
-      <div className="results"><p><strong>{filtered.length}</strong> trades</p><div className="result-actions">{(year!=="all"||month!=="all"||team!=="0"||quick!=="all"||query)&&<button onClick={clear}>Clear filters</button>}<button onClick={()=>exportExcel(filtered)}>Export Excel</button><button onClick={()=>exportJson(filtered)}>Export JSON</button></div></div>
-      {!!tradeLeaders.length&&<div className="leaderboard"><strong>Community trade winners</strong>{tradeLeaders.map((x,i)=><span key={x.name}>{i+1}. {x.name} <b>{x.average>0?"+":""}{x.average.toFixed(1)}</b></span>)}</div>}
+      <div className="results"><p><strong>{filtered.length}</strong> trades</p><div className="result-actions"><button className="leader-pill" onClick={()=>setLeaderboard("trades")}>Leaderboard</button>{(year!=="all"||month!=="all"||team!=="0"||quick!=="all"||query)&&<button onClick={clear}>Clear filters</button>}<button onClick={()=>exportExcel(filtered)}>Export Excel</button><button onClick={()=>exportJson(filtered)}>Export JSON</button></div></div>
       <div className="trade-grid">{filtered.map(trade=><article className="trade-card" key={trade.id}>
         <div className="trade-meta"><time dateTime={trade.date}>{new Date(`${trade.date}T12:00:00`).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</time><span>{trade.august?"August":trade.cash?"Cash":trade.picks?"Picks":"Players"}</span></div>
         <div className="side"><h2>{trade.partyA}</h2><div className="assets"><AssetList text={trade.sendsA}/></div></div>
@@ -81,8 +85,7 @@ export default function Home() {
         <label>Roaster<select value={roaster} onChange={e=>setRoaster(e.target.value)}><option value="all">All roasters</option>{people.map(person=><option key={person}>{person}</option>)}</select></label>
         <label>Roasted<select value={roasted} onChange={e=>setRoasted(e.target.value)}><option value="all">Everyone roasted</option>{people.map(person=><option key={person}>{person}</option>)}</select></label>
       </div>
-      <div className="results"><p><strong>{filteredRoasts.length}</strong> roasts</p>{(roaster!=="all"||roasted!=="all")&&<button onClick={()=>{setRoaster("all");setRoasted("all")}}>Clear filters</button>}</div>
-      {!!roastLeaders.length&&<div className="leaderboard"><strong>Top roasters</strong>{roastLeaders.map((x,i)=><span key={x.name}>{i+1}. {x.name} <b>{x.average.toFixed(1)} ★</b></span>)}</div>}
+      <div className="results"><p><strong>{filteredRoasts.length}</strong> roasts</p><div className="result-actions"><button className="leader-pill" onClick={()=>setLeaderboard("roasts")}>Leaderboard</button>{(roaster!=="all"||roasted!=="all")&&<button onClick={()=>{setRoaster("all");setRoasted("all")}}>Clear filters</button>}</div></div>
       <div className="roast-list">{filteredRoasts.map(item=><article className="roast-card" key={item.code}>
         <div className="roast-meta"><strong>{item.code}</strong><time dateTime={item.date}>{new Date(`${item.date}T12:00:00`).toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</time></div>
         <div className="roast-names"><span><small>Roaster</small>{item.roaster}</span><span className="roast-arrow">→</span><span><small>Roasted</small>{item.roasted}</span></div>
@@ -92,5 +95,6 @@ export default function Home() {
         <RoastVote id={item.code} summary={roastVotes[item.code]} onSaved={updateVotes}/>
       </article>)}</div>
     </section>}
+    {leaderboard&&<LeaderboardModal kind={leaderboard} onClose={()=>setLeaderboard(null)} tradeRows={tradeLeaders} roastRows={roastLeaders}/>}
   </main>;
 }
