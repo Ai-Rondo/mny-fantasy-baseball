@@ -1,4 +1,4 @@
-# MNY Fantasy Baseball Trade Ledger
+# Maybe Next Year Fantasy Baseball League History
 
 A responsive, filterable archive of trades posted in the Maybe Next Year Fantasy Baseball league chat.
 

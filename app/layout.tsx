@@ -14,21 +14,21 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://mny-fantasy-baseball.pages.dev"),
-  title: "MNY Fantasy Baseball Trade Ledger",
-  description: "Search and filter the trade history of Maybe Next Year Fantasy Baseball.",
+  title: "Maybe Next Year Fantasy Baseball League History",
+  description: "Trades, roasts, voting, and league history for Maybe Next Year Fantasy Baseball.",
   icons: {
     icon: "/favicon.ico",
   },
   openGraph: {
-    title: "MNY Fantasy Baseball Trade Ledger",
-    description: "League trade history",
-    images: [{ url: "/og-v2.png", width: 1731, height: 909, alt: "Trade Ledger" }],
+    title: "Maybe Next Year Fantasy Baseball League History",
+    description: "Trades, roasts, voting, and league history",
+    images: [{ url: "/og-history.png", width: 1731, height: 909, alt: "Maybe Next Year Fantasy Baseball League History" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "MNY Fantasy Baseball Trade Ledger",
-    description: "League trade history",
-    images: ["/og-v2.png"],
+    title: "Maybe Next Year Fantasy Baseball League History",
+    description: "Trades, roasts, voting, and league history",
+    images: ["/og-history.png"],
   },
 };
 
