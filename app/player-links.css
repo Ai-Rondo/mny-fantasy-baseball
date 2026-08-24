@@ -1,0 +1,1 @@
+.player-link{color:var(--green);text-decoration:none;border:1px solid #d7e4db;background:#f1f6f3;transition:background .15s,border-color .15s}.player-link:hover,.player-link:focus-visible{background:#e3eee7;border-color:#9fbbaa;outline:none}.player-link::after{content:"↗";margin-left:4px;font-size:8px;opacity:.65}

@@ -24,6 +24,8 @@ test("server-renders the MNY trade explorer", async () => {
   assert.match(html, /Export JSON/i);
   assert.match(html, /David Bednar/i);
   assert.match(html, /Spencer Jones/i);
+  assert.match(html, /baseball-reference\.com\/search\/search\.fcgi\?search=Spencer%20Jones/i);
+  assert.doesNotMatch(html, /baseball-reference\.com[^>]+2027%202nd-round%20pick/i);
   assert.match(html, /Ryan Penrod \/ The Voey Jottos/i);
   assert.match(html, />Roasts</i);
   assert.match(html, />Leaderboard</i);

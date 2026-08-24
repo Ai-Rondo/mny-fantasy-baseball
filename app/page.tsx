@@ -25,7 +25,7 @@ const teamFilters = [
 ];
 
 function AssetList({text}:{text:string}) {
-  return <>{text.split(";").map(item=><span className="asset" key={item}>{item.trim()}</span>)}</>;
+  return <>{text.split(";").map(raw=>{const item=raw.trim();const isPlayer=!/^\$/i.test(item)&&!/(?:draft|pick|cash|capital)/i.test(item);if(!isPlayer)return <span className="asset" key={item}>{item}</span>;const player=item.replace(/\s*\([^)]*\)\s*$/,"");return <a className="asset player-link" href={`https://www.baseball-reference.com/search/search.fcgi?search=${encodeURIComponent(player)}`} target="_blank" rel="noreferrer" title={`View ${player} on Baseball Reference`} key={item}>{item}</a>;})}</>;
 }
 
 function LeaderboardPage({tradeRows,roastRows}:{tradeRows:Array<{name:string;average:number;votes:number}>;roastRows:Array<{name:string;given?:number;givenVotes:number;received?:number;receivedVotes:number}>}) {
