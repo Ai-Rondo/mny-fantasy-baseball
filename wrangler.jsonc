@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "mny-fantasy-baseball",
+  "pages_build_output_dir": "./pages-dist",
+  "compatibility_date": "2026-08-24",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "mny-fantasy-baseball-votes",
+      "database_id": "7ffc2081-985b-4738-9ee4-25914a07f483"
+    }
+  ],
+  "observability": { "enabled": true }
+}

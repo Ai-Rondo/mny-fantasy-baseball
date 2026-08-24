@@ -1,0 +1,15 @@
+CREATE TABLE IF NOT EXISTS trade_votes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  trade_id TEXT NOT NULL,
+  score INTEGER NOT NULL CHECK(score BETWEEN -100 AND 100),
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_trade_votes_trade_id ON trade_votes(trade_id);
+
+CREATE TABLE IF NOT EXISTS roast_votes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  roast_code TEXT NOT NULL,
+  stars INTEGER NOT NULL CHECK(stars BETWEEN 1 AND 5),
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_roast_votes_roast_code ON roast_votes(roast_code);
