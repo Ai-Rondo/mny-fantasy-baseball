@@ -22,6 +22,9 @@ test("server-renders the MNY trade explorer", async () => {
   assert.match(html, />August</i);
   assert.match(html, /Export Excel/i);
   assert.match(html, /Export JSON/i);
+  assert.match(html, /David Bednar/i);
+  assert.match(html, /Spencer Jones/i);
+  assert.match(html, /Ryan Penrod \/ The Voey Jottos/i);
   assert.match(html, />Roasts</i);
   assert.match(html, />Leaderboard</i);
   assert.match(html, />Vote</i);
