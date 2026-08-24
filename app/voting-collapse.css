@@ -1,0 +1,8 @@
+.vote-shell{border-top:1px solid var(--line);background:#fbfcfa}
+.vote-toggle{width:100%;border:0;background:transparent;color:var(--green);padding:10px 14px;display:flex;justify-content:center;align-items:center;gap:8px;font-size:11px;font-weight:700;cursor:pointer}
+.vote-toggle small{color:var(--muted);font-size:9px;font-weight:400}
+.vote-toggle[aria-expanded="true"]{border-bottom:1px solid var(--line)}
+.vote-shell .vote-box{border-top:0}
+.roast-vote-shell{margin:14px -18px -18px}
+.roast-vote-shell .star-vote{border-top:0;margin-top:0;padding:14px 18px 16px}
+@media(max-width:520px){.roast-vote-shell{margin:14px -14px -14px}}

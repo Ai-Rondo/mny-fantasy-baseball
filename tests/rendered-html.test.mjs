@@ -24,8 +24,9 @@ test("server-renders the MNY trade explorer", async () => {
   assert.match(html, /Export Excel/i);
   assert.match(html, /Export JSON/i);
   assert.match(html, />Roasts</i);
-  assert.match(html, /Lock choice/i);
-  assert.match(html, /Who won\?/i);
+  assert.match(html, />Vote</i);
+  assert.doesNotMatch(html, /Lock choice/i);
+  assert.doesNotMatch(html, /Who won\?/i);
   assert.doesNotMatch(html, /Every deal|One ledger|Trade explorer|THE LEAGUE ARCHIVE/i);
   assert.doesNotMatch(html, /codex-preview|SkeletonPreview|Your site is taking shape/i);
 });
