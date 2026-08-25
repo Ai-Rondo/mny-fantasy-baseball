@@ -1,0 +1,81 @@
+HOW TO EXPORT THE MAYBE NEXT YEAR FANTASY BASEBALL MESSENGER HISTORY
+
+Thanks for helping recover the league's missing trade history. We only need the
+JSON message files from the Maybe Next Year Fantasy Baseball conversation.
+Please do not send your complete Facebook archive or other private conversations.
+
+PART 1 - REQUEST THE FACEBOOK EXPORT
+
+1. Open Facebook and sign in to the account that belonged to the league chat.
+2. Open Menu or your profile picture.
+3. Select Settings & privacy, then Settings.
+4. Open Accounts Center.
+5. Select Your information and permissions.
+6. Select Export your information or Download your information.
+7. Select Create export and choose the correct Facebook profile.
+8. Choose Export to device or Download to device.
+9. Choose Specific information instead of exporting everything.
+10. Select Messages and deselect every other category if Facebook allows it.
+11. Select All time for the date range. We need league activity from 2021-2024.
+12. Select JSON as the format. Do not choose HTML.
+13. Media quality can be set to Low. Photos and videos are not needed.
+14. Start the export. Facebook will notify you when it is ready.
+15. Download the completed ZIP to a computer. Do not email the complete ZIP.
+
+PART 2 - FIND ONLY THE LEAGUE CONVERSATION
+
+1. On Windows, right-click the ZIP and choose Extract All. On a Mac,
+   double-click the ZIP.
+2. Open the extracted folder and follow this path:
+
+   your_facebook_activity
+   messages
+   inbox
+
+3. Find a folder whose name begins with:
+
+   maybenextyearfantasybaseball_
+
+   It may look like:
+
+   maybenextyearfantasybaseball_3089845557717153
+
+   The number at the end might be different.
+
+4. Open that folder and locate every numbered JSON file:
+
+   message_1.json
+   message_2.json
+   message_3.json
+   and so on
+
+5. Copy every message_#.json file into a new empty folder.
+6. Do not copy the photos, videos, GIFs, audio, stickers or files folders.
+
+PART 3 - ZIP AND EMAIL THE JSON FILES
+
+1. Select all the copied message_#.json files.
+2. On Windows, right-click and choose Compress to ZIP file or
+   Send to > Compressed (zipped) folder. On a Mac, choose Compress.
+3. Name the new file:
+
+   MNY_Baseball_Messenger_JSON.zip
+
+4. Attach only that new ZIP to an email addressed to:
+
+   rpenrod4@gmail.com
+
+5. Suggested subject:
+
+   MNY Fantasy Baseball Messenger History
+
+6. Send the email. If it is too large for email, upload only the smaller JSON
+   ZIP to Google Drive, OneDrive, Dropbox or iCloud Drive and email the link.
+
+PRIVACY NOTE
+
+The message_#.json files contain only the Maybe Next Year Fantasy Baseball group
+conversation, although they still include the regular conversation inside that
+group. The messages will be reviewed privately to identify league trades. Only
+the cleaned trade ledger will be published.
+
