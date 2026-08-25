@@ -29,6 +29,7 @@ test("server-renders the MNY trade explorer", async () => {
   assert.match(html, /Ryan Penrod \/ The Voey Jottos/i);
   assert.match(html, />Roasts</i);
   assert.match(html, />Leaderboard</i);
+  assert.match(html, />Previous Drafts</i);
   assert.match(html, />Vote</i);
   assert.doesNotMatch(html, /Lock choice/i);
   assert.doesNotMatch(html, /Who won\?/i);

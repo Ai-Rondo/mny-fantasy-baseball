@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import trades from "./trades.json";
 import roasts from "./roasts.json";
+import drafts from "./drafts.json";
 import { exportExcel, exportJson } from "./exports";
 import { RoastVote, TradeVote, type VoteSummary } from "./voting";
 
@@ -32,12 +33,19 @@ function LeaderboardPage({tradeRows,roastRows}:{tradeRows:Array<{name:string;ave
   return <section className="ledger leaderboard-page"><div className="standing-card"><div className="standing-head"><h2>Best traders</h2><p>Average result from rated trades · −10 to +10</p></div><div className="leader-table"><div className="leader-row heading"><span>Owner</span><span>Score</span><span>Votes</span></div>{tradeRows.map((row,i)=><div className="leader-row" key={row.name}><span><b>{i+1}</b>{row.name}</span><strong className={row.average>0?"positive":row.average<0?"negative":""}>{row.average>0?"+":""}{row.average.toFixed(1)}</strong><span>{row.votes}</span></div>)}{!tradeRows.length&&<p className="no-ratings">No trade votes yet.</p>}</div></div><div className="standing-card"><div className="standing-head"><h2>Roast standings</h2><p>Average stars for roasts given and times roasted</p></div><div className="leader-table roast-leader-table"><div className="leader-row heading"><span>Person</span><span>Roasts given</span><span>Times roasted</span></div>{roastRows.map((row,i)=><div className="leader-row" key={row.name}><span><b>{i+1}</b>{row.name}</span><strong>{row.given===undefined?"—":`${row.given.toFixed(1)} ★`}<small>{row.givenVotes?`${row.givenVotes} ratings`:""}</small></strong><strong>{row.received===undefined?"—":`${row.received.toFixed(1)} ★`}<small>{row.receivedVotes?`${row.receivedVotes} ratings`:""}</small></strong></div>)}{!roastRows.length&&<p className="no-ratings">No roast ratings yet.</p>}</div></div></section>;
 }
 
+function DraftHistory() {
+  return <section className="ledger draft-history">{drafts.map(draft=><article className="draft-season" key={draft.year}>
+    <div className="draft-season-head"><div><h2>{draft.year} Minor League Draft</h2><p>{draft.note}</p></div><time dateTime={draft.date}>{new Date(`${draft.date}T12:00:00`).toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</time></div>
+    <div className="draft-table"><div className="draft-row heading"><span>Overall</span><span>Round / Pick</span><span>Owner</span><span>Player</span></div>{draft.picks.map(pick=><div className="draft-row" key={`${draft.year}-${pick.overall}`}><strong>#{pick.overall}</strong><span>{pick.round}.{pick.pick}</span><span>{pick.owner}</span><a className="draft-player" href={`https://www.baseball-reference.com/search/search.fcgi?search=${encodeURIComponent(pick.player)}`} target="_blank" rel="noreferrer">{pick.player}</a></div>)}</div>
+  </article>)}</section>;
+}
+
 export default function Home() {
   const [tradeVotes,setTradeVotes]=useState<VoteSummary>({});
   const [roastVotes,setRoastVotes]=useState<VoteSummary>({});
   const updateVotes=(data:unknown)=>{const payload=data as {trades?:Array<{id:string;average:number;votes:number}>;roasts?:Array<{id:string;average:number;votes:number}>};setTradeVotes(Object.fromEntries((payload.trades??[]).map(x=>[x.id,x])));setRoastVotes(Object.fromEntries((payload.roasts??[]).map(x=>[x.id,x])));};
   useEffect(()=>{fetch("/api/votes").then(r=>r.ok?r.json():Promise.reject()).then(updateVotes).catch(()=>{});},[]);
-  const [tab,setTab]=useState<"trades"|"roasts"|"leaderboard">("trades");
+  const [tab,setTab]=useState<"trades"|"roasts"|"leaderboard"|"drafts">("trades");
   const [year,setYear]=useState("all");
   const [month,setMonth]=useState("all");
   const [team,setTeam]=useState("0");
@@ -61,7 +69,7 @@ export default function Home() {
   const roastLeaders=useMemo(()=>{const scores=new Map<string,{givenPoints:number;givenVotes:number;receivedPoints:number;receivedVotes:number}>();const get=(name:string)=>scores.get(name)??{givenPoints:0,givenVotes:0,receivedPoints:0,receivedVotes:0};for(const roast of roasts){const vote=roastVotes[roast.code];if(!vote)continue;const giver=get(roast.roaster);scores.set(roast.roaster,{...giver,givenPoints:giver.givenPoints+vote.average*vote.votes,givenVotes:giver.givenVotes+vote.votes});const target=get(roast.roasted);scores.set(roast.roasted,{...target,receivedPoints:target.receivedPoints+vote.average*vote.votes,receivedVotes:target.receivedVotes+vote.votes});}return [...scores].map(([name,x])=>({name,given:x.givenVotes?x.givenPoints/x.givenVotes:undefined,givenVotes:x.givenVotes,received:x.receivedVotes?x.receivedPoints/x.receivedVotes:undefined,receivedVotes:x.receivedVotes})).sort((a,b)=>(b.given??0)-(a.given??0));},[roastVotes]);
 
   return <main id="top">
-    <header className="site-header"><div><h1>Maybe Next Year Fantasy Baseball League History</h1><p>{tab==="trades"?`${trades.length} recorded trades`:tab==="roasts"?`${roasts.length} all-timers`:"Community standings"}</p><nav className="tabs" aria-label="Site sections"><button className={tab==="trades"?"active":""} onClick={()=>setTab("trades")}>Trades</button><button className={tab==="roasts"?"active":""} onClick={()=>setTab("roasts")}>Roasts</button><button className={tab==="leaderboard"?"active":""} onClick={()=>setTab("leaderboard")}>Leaderboard</button></nav></div></header>
+    <header className="site-header"><div><h1>Maybe Next Year Fantasy Baseball League History</h1><p>{tab==="trades"?`${trades.length} recorded trades`:tab==="roasts"?`${roasts.length} all-timers`:tab==="drafts"?`${drafts.reduce((total,draft)=>total+draft.picks.length,0)} draft picks`:"Community standings"}</p><nav className="tabs" aria-label="Site sections"><button className={tab==="trades"?"active":""} onClick={()=>setTab("trades")}>Trades</button><button className={tab==="roasts"?"active":""} onClick={()=>setTab("roasts")}>Roasts</button><button className={tab==="leaderboard"?"active":""} onClick={()=>setTab("leaderboard")}>Leaderboard</button><button className={tab==="drafts"?"active":""} onClick={()=>setTab("drafts")}>Previous Drafts</button></nav></div></header>
     {tab==="trades"?<section className="ledger">
       <div className="filters">
         <label>Team<select value={team} onChange={e=>setTeam(e.target.value)}>{teamFilters.map((item,i)=><option value={i} key={item.label}>{item.label}</option>)}</select></label>
@@ -93,6 +101,6 @@ export default function Home() {
         <div className="flags">{item.flags.map(flag=><span key={flag}>{flag}</span>)}</div>
         <RoastVote id={item.code} summary={roastVotes[item.code]} onSaved={updateVotes}/>
       </article>)}</div>
-    </section>:<LeaderboardPage tradeRows={tradeLeaders} roastRows={roastLeaders}/>}
+    </section>:tab==="leaderboard"?<LeaderboardPage tradeRows={tradeLeaders} roastRows={roastLeaders}/>:<DraftHistory/>}
   </main>;
 }
