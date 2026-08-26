@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS private_roster_data (
+  id TEXT NOT NULL,
+  part INTEGER NOT NULL,
+  payload TEXT NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id, part)
+);

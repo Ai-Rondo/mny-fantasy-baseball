@@ -13,4 +13,6 @@ const response = await worker.fetch(new Request("https://mny-fantasy-baseball.pa
 if (!response.ok) throw new Error(`Static render failed: ${response.status}`);
 await fs.writeFile(new URL("index.html", output), await response.text());
 await fs.writeFile(new URL("_headers", output), "/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  Permissions-Policy: camera=(), microphone=(), geolocation=()\n");
+await fs.rm(new URL("../dist/server/wrangler.json", import.meta.url), { force: true });
+await fs.rm(new URL("../.wrangler/deploy/config.json", import.meta.url), { force: true });
 console.log("Cloudflare Pages bundle written to pages-dist/");

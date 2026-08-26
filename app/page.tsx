@@ -6,6 +6,7 @@ import roasts from "./roasts.json";
 import drafts from "./drafts.json";
 import { exportExcel, exportJson } from "./exports";
 import { RoastVote, TradeVote, type VoteSummary } from "./voting";
+import { RosterPortal, type RosterData } from "./roster-portal";
 
 const months = ["All months","January","February","March","April","May","June","July","August","September","October","November","December"];
 const quickFilters = [{id:"all",label:"All"},{id:"cash",label:"Cash"},{id:"picks",label:"Draft picks"},{id:"august",label:"August"}];
@@ -45,7 +46,17 @@ export default function Home() {
   const [roastVotes,setRoastVotes]=useState<VoteSummary>({});
   const updateVotes=(data:unknown)=>{const payload=data as {trades?:Array<{id:string;average:number;votes:number}>;roasts?:Array<{id:string;average:number;votes:number}>};setTradeVotes(Object.fromEntries((payload.trades??[]).map(x=>[x.id,x])));setRoastVotes(Object.fromEntries((payload.roasts??[]).map(x=>[x.id,x])));};
   useEffect(()=>{fetch("/api/votes").then(r=>r.ok?r.json():Promise.reject()).then(updateVotes).catch(()=>{});},[]);
-  const [tab,setTab]=useState<"trades"|"roasts"|"leaderboard"|"drafts">("trades");
+  const [tab,setTab]=useState<"trades"|"roasts"|"leaderboard"|"drafts"|"rosters">("trades");
+  const [rosterAuthorized,setRosterAuthorized]=useState(false);
+  const [rosterData,setRosterData]=useState<RosterData|null>(null);
+  const [passwordOpen,setPasswordOpen]=useState(false);
+  const [password,setPassword]=useState("");
+  const [passwordError,setPasswordError]=useState("");
+  const [passwordBusy,setPasswordBusy]=useState(false);
+  const loadRosterData=async()=>{const response=await fetch("/api/rosters/data",{credentials:"same-origin"});if(!response.ok)throw new Error("Roster room is locked.");const data=await response.json() as RosterData;setRosterData(data);setRosterAuthorized(true);return data;};
+  useEffect(()=>{fetch("/api/rosters/login",{credentials:"same-origin"}).then(response=>response.ok?response.json():Promise.reject()).then(({authorized}:{authorized:boolean})=>authorized?loadRosterData():undefined).catch(()=>{});},[]);
+  const unlockRoster=async(event:React.FormEvent)=>{event.preventDefault();setPasswordBusy(true);setPasswordError("");try{const response=await fetch("/api/rosters/login",{method:"POST",credentials:"same-origin",headers:{"content-type":"application/json"},body:JSON.stringify({password})});if(!response.ok)throw new Error("That password did not unlock the roster room.");await loadRosterData();setPassword("");setPasswordOpen(false);setTab("rosters");}catch(error){setPasswordError(error instanceof Error?error.message:"Could not unlock the roster room.");}finally{setPasswordBusy(false);}};
+  const lockRoster=async()=>{await fetch("/api/rosters/login",{method:"DELETE",credentials:"same-origin"}).catch(()=>{});setRosterAuthorized(false);setRosterData(null);setTab("trades");};
   const [year,setYear]=useState("all");
   const [month,setMonth]=useState("all");
   const [team,setTeam]=useState("0");
@@ -69,7 +80,8 @@ export default function Home() {
   const roastLeaders=useMemo(()=>{const scores=new Map<string,{givenPoints:number;givenVotes:number;receivedPoints:number;receivedVotes:number}>();const get=(name:string)=>scores.get(name)??{givenPoints:0,givenVotes:0,receivedPoints:0,receivedVotes:0};for(const roast of roasts){const vote=roastVotes[roast.code];if(!vote)continue;const giver=get(roast.roaster);scores.set(roast.roaster,{...giver,givenPoints:giver.givenPoints+vote.average*vote.votes,givenVotes:giver.givenVotes+vote.votes});const target=get(roast.roasted);scores.set(roast.roasted,{...target,receivedPoints:target.receivedPoints+vote.average*vote.votes,receivedVotes:target.receivedVotes+vote.votes});}return [...scores].map(([name,x])=>({name,given:x.givenVotes?x.givenPoints/x.givenVotes:undefined,givenVotes:x.givenVotes,received:x.receivedVotes?x.receivedPoints/x.receivedVotes:undefined,receivedVotes:x.receivedVotes})).sort((a,b)=>(b.given??0)-(a.given??0));},[roastVotes]);
 
   return <main id="top">
-    <header className="site-header"><div><h1>Maybe Next Year Fantasy Baseball League History</h1><p>{tab==="trades"?`${trades.length} recorded trades`:tab==="roasts"?`${roasts.length} all-timers`:tab==="drafts"?`${drafts.reduce((total,draft)=>total+draft.picks.length,0)} draft picks`:"Community standings"}</p><nav className="tabs" aria-label="Site sections"><button className={tab==="trades"?"active":""} onClick={()=>setTab("trades")}>Trades</button><button className={tab==="roasts"?"active":""} onClick={()=>setTab("roasts")}>Roasts</button><button className={tab==="leaderboard"?"active":""} onClick={()=>setTab("leaderboard")}>Leaderboard</button><button className={tab==="drafts"?"active":""} onClick={()=>setTab("drafts")}>Previous Drafts</button></nav></div></header>
+    <header className="site-header"><div><div className="site-title"><h1>Maybe Next Year Fantasy Baseball League History</h1><p>{tab==="trades"?`${trades.length} recorded trades`:tab==="roasts"?`${roasts.length} all-timers`:tab==="drafts"?`${drafts.reduce((total,draft)=>total+draft.picks.length,0)} draft picks`:tab==="rosters"?"Private 2027 front office":"Community standings"}</p></div><button className={`roster-unlock${rosterAuthorized?" unlocked":""}`} aria-label={rosterAuthorized?"Open roster room":"Unlock roster room"} title="Roster room" onClick={()=>rosterAuthorized?setTab("rosters"):setPasswordOpen(true)}>⚾</button><nav className="tabs" aria-label="Site sections"><button className={tab==="trades"?"active":""} onClick={()=>setTab("trades")}>Trades</button><button className={tab==="roasts"?"active":""} onClick={()=>setTab("roasts")}>Roasts</button><button className={tab==="leaderboard"?"active":""} onClick={()=>setTab("leaderboard")}>Leaderboard</button><button className={tab==="drafts"?"active":""} onClick={()=>setTab("drafts")}>Previous Drafts</button>{rosterAuthorized&&<button className={`roster-tab${tab==="rosters"?" active":""}`} onClick={()=>setTab("rosters")}>Rosters</button>}</nav></div></header>
+    {passwordOpen&&<div className="password-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)setPasswordOpen(false)}}><section className="password-dialog" role="dialog" aria-modal="true" aria-labelledby="roster-password-title"><div className="password-dialog-head"><span aria-hidden="true">⚾</span><h2 id="roster-password-title">Roster room</h2><p>Enter the league password to continue.</p></div><form onSubmit={unlockRoster}><label>Password<input type="password" value={password} onChange={event=>setPassword(event.target.value)} autoComplete="current-password"/></label>{passwordError&&<p className="password-error" role="alert">{passwordError}</p>}<div className="password-actions"><button type="button" onClick={()=>setPasswordOpen(false)}>Cancel</button><button type="submit" disabled={passwordBusy||!password}>{passwordBusy?"Unlocking…":"Unlock"}</button></div></form></section></div>}
     {tab==="trades"?<section className="ledger">
       <div className="filters">
         <label>Team<select value={team} onChange={e=>setTeam(e.target.value)}>{teamFilters.map((item,i)=><option value={i} key={item.label}>{item.label}</option>)}</select></label>
@@ -101,6 +113,6 @@ export default function Home() {
         <div className="flags">{item.flags.map(flag=><span key={flag}>{flag}</span>)}</div>
         <RoastVote id={item.code} summary={roastVotes[item.code]} onSaved={updateVotes}/>
       </article>)}</div>
-    </section>:tab==="leaderboard"?<LeaderboardPage tradeRows={tradeLeaders} roastRows={roastLeaders}/>:<DraftHistory/>}
+    </section>:tab==="leaderboard"?<LeaderboardPage tradeRows={tradeLeaders} roastRows={roastLeaders}/>:tab==="drafts"?<DraftHistory/>:rosterData?<RosterPortal data={rosterData} onLock={lockRoster}/>:null}
   </main>;
 }
