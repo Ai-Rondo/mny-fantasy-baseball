@@ -6,7 +6,7 @@ import drafts from "./drafts.json";
 type Row = Record<string, string | number | null>;
 export type RosterData = { season:number; rosterSize:number; salaryCap:number; rules:Row[]; decisions:Row[]; teams:Array<{team:string;owner:string;summary:Row;committed:Row[];projected:Row[];expiring:Row[];prospects:Row[]}> };
 
-const money = (value:unknown) => `$${Number(value ?? 0)}`;
+const money = (value:unknown) => `$${Math.round(Number(value ?? 0))}`;
 const playerUrl = (name:unknown) => `https://www.baseball-reference.com/search/search.fcgi?search=${encodeURIComponent(String(name ?? ""))}`;
 
 function Timeline({row}:{row:Row}) {
