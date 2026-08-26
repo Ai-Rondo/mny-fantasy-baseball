@@ -56,7 +56,6 @@ export default function Home() {
   const loadRosterData=async()=>{const response=await fetch("/api/rosters/data",{credentials:"same-origin"});if(!response.ok)throw new Error("Roster room is locked.");const data=await response.json() as RosterData;setRosterData(data);setRosterAuthorized(true);return data;};
   useEffect(()=>{fetch("/api/rosters/login",{credentials:"same-origin"}).then(response=>response.ok?response.json():Promise.reject()).then(({authorized}:{authorized:boolean})=>authorized?loadRosterData():undefined).catch(()=>{});},[]);
   const unlockRoster=async(event:React.FormEvent)=>{event.preventDefault();setPasswordBusy(true);setPasswordError("");try{const response=await fetch("/api/rosters/login",{method:"POST",credentials:"same-origin",headers:{"content-type":"application/json"},body:JSON.stringify({password})});if(!response.ok)throw new Error("That password did not unlock the roster room.");await loadRosterData();setPassword("");setPasswordOpen(false);setTab("rosters");}catch(error){setPasswordError(error instanceof Error?error.message:"Could not unlock the roster room.");}finally{setPasswordBusy(false);}};
-  const lockRoster=async()=>{await fetch("/api/rosters/login",{method:"DELETE",credentials:"same-origin"}).catch(()=>{});setRosterAuthorized(false);setRosterData(null);setTab("trades");};
   const [year,setYear]=useState("all");
   const [month,setMonth]=useState("all");
   const [team,setTeam]=useState("0");
@@ -113,6 +112,6 @@ export default function Home() {
         <div className="flags">{item.flags.map(flag=><span key={flag}>{flag}</span>)}</div>
         <RoastVote id={item.code} summary={roastVotes[item.code]} onSaved={updateVotes}/>
       </article>)}</div>
-    </section>:tab==="leaderboard"?<LeaderboardPage tradeRows={tradeLeaders} roastRows={roastLeaders}/>:tab==="drafts"?<DraftHistory/>:rosterData?<RosterPortal data={rosterData} onLock={lockRoster}/>:null}
+    </section>:tab==="leaderboard"?<LeaderboardPage tradeRows={tradeLeaders} roastRows={roastLeaders}/>:tab==="drafts"?<DraftHistory/>:rosterData?<RosterPortal data={rosterData}/>:null}
   </main>;
 }
