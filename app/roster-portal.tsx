@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import drafts from "./drafts.json";
 
+type ScoutingLink={source:string;url:string};
 type Row = Record<string, string | number | null>;
 export type RosterData = { season:number; rosterSize:number; salaryCap:number; rules:Row[]; decisions:Row[]; teams:Array<{team:string;owner:string;summary:Row;committed:Row[];projected:Row[];expiring:Row[];prospects:Row[]}> };
 
@@ -24,7 +25,9 @@ function PlayerTable({title,subtitle,rows,kind}:{title:string;subtitle:string;ro
   return <section className="roster-section"><div className="roster-section-head"><div><h3>{title}</h3><p>{subtitle}</p></div><span>{rows.length}</span></div>{rows.length?<div className="roster-player-list">{rows.map((row,index)=>{
     const name=String(row.Player??"");
     const draft=drafts.flatMap(d=>d.picks.map(p=>({...p,year:d.year}))).find(p=>p.player.toLowerCase()===name.toLowerCase());
-    return <article className={`roster-player ${kind}`} key={`${name}-${index}`}><div className="player-identity"><a href={playerUrl(name)} target="_blank" rel="noreferrer">{name}</a><span>{row.Pos||"—"} · {row.MLB||row["MLB Org"]||"—"}</span>{draft&&<small>Drafted {draft.year} · #{draft.overall} overall</small>}</div><div className="player-status"><small>{row["2026 Status"]||row["2027 Projection"]||row.Type||"Status"}</small><b>{row["2027 Contract"]||row.Contract||"—"}</b></div><Timeline row={row}/><div className="player-points"><small>2026 FPTS</small><b>{Number(row["2026 FPTS"]??0).toLocaleString("en-US",{maximumFractionDigits:2})}</b></div>{(row.Basis||row.Comment)&&<p className="player-note">{row.Basis||row.Comment}</p>}</article>})}</div>:<p className="roster-empty">None currently projected.</p>}</section>;
+    const reportValue=(row as Record<string,unknown>)["Scouting Reports"];
+    const reports=Array.isArray(reportValue)?reportValue as ScoutingLink[]:[];
+    return <article className={`roster-player ${kind}`} key={`${name}-${index}`}><div className="player-identity"><a href={playerUrl(name)} target="_blank" rel="noreferrer">{name}</a><span>{row.Pos||"—"} · {row.MLB||row["MLB Org"]||"—"}</span>{draft&&<small>Drafted {draft.year} · #{draft.overall} overall</small>}{reports.length>0&&<div className="scouting-links">{reports.map(report=><a key={report.source} href={report.url} target="_blank" rel="noreferrer" title={`${name} scouting report from ${report.source}`}><b>{report.source==="Baseball America"?"BA":"MLB"}</b><span>{report.source==="Baseball America"?"Scouting":"Pipeline"}</span></a>)}</div>}</div><div className="player-status"><small>{row["2026 Status"]||row["2027 Projection"]||row.Type||"Status"}</small><b>{row["2027 Contract"]||row.Contract||"—"}</b></div><Timeline row={row}/><div className="player-points"><small>2026 FPTS</small><b>{Number(row["2026 FPTS"]??0).toLocaleString("en-US",{maximumFractionDigits:2})}</b></div>{(row.Basis||row.Comment)&&<p className="player-note">{row.Basis||row.Comment}</p>}</article>})}</div>:<p className="roster-empty">None currently projected.</p>}</section>;
 }
 
 function RosterDepthChart({rows}:{rows:Row[]}) {
@@ -46,7 +49,7 @@ export function RosterPortal({data}:{data:RosterData}) {
   const farm=useMemo(()=>data.teams.flatMap(item=>item.prospects.map(row=>({...row,FantasyTeam:item.team,Owner:item.owner}))).filter(row=>position==="All"||String(row.Pos).split(",").includes(position)).sort((a,b)=>Number(a["MLB Pipeline Rank"]??999)-Number(b["MLB Pipeline Rank"]??999)||Number(String(b["Roster %"]??"0").replace("%",""))-Number(String(a["Roster %"]??"0").replace("%",""))),[data,position]);
   const positions=["All","C","1B","2B","3B","SS","OF","SP","RP"];
   const contractRows=[...team.committed,...team.projected];
-  const teamDrafts=drafts.filter(draft=>draft.year===2026).flatMap(draft=>draft.picks.filter(pick=>pick.owner===team.owner).map(pick=>({...pick,year:draft.year,current:team.prospects.some(row=>String(row.Player).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()===pick.player.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase())}))).sort((a,b)=>a.overall-b.overall);
+  const teamDrafts=drafts.filter(draft=>draft.year===2025||draft.year===2026).flatMap(draft=>draft.picks.filter(pick=>pick.owner===team.owner).map(pick=>({...pick,year:draft.year,current:team.prospects.some(row=>String(row.Player).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()===pick.player.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase())}))).sort((a,b)=>b.year-a.year||a.overall-b.overall);
   const farmSystems:Array<{item:RosterData["teams"][number];ranked:number;score:number}>=[];
   const salaryYears=(row:Row)=>{const contract=String(row["2027 Contract"]??row.Contract??"");const salary=Number(row["2027 $"]??0);if(/^\d+$/.test(contract))return [2027,2028,2029].map((year,i)=>i<Number(contract)?salary:null);if(contract==="3mL")return [0,5,15];if(contract==="2mL")return [5,15,null];if(contract==="1mL"||contract==="1FA")return [salary,null,null];return [null,null,null];};
   return <section className="ledger roster-portal">
@@ -60,7 +63,7 @@ export function RosterPortal({data}:{data:RosterData}) {
       <div className="roster-section-head depth-title"><div><h3>Projected 22-Man Roster</h3><p>Eligible players placed into lineup, pitching and bench slots</p></div><span>{contractRows.length}</span></div>
       <RosterDepthChart rows={contractRows}/>
       <PlayerTable title="Farm System" subtitle="0mL prospects whose contract clock has not started" rows={team.prospects} kind="prospect"/>
-      <section className="drafted-prospects"><div className="roster-section-head"><div><h3>2026 Minor League Draft</h3><p>Recorded selections for this owner</p></div><span>{teamDrafts.length}</span></div>{teamDrafts.map(pick=><div className="drafted-prospect" key={`${pick.year}-${pick.overall}`}><b>{pick.year}</b><span>#{pick.overall}</span><a href={playerUrl(pick.player)} target="_blank" rel="noreferrer">{pick.player}</a><em>{pick.current?"Current farm":"2026 selection"}</em></div>)}</section>
+      <section className="drafted-prospects"><div className="roster-section-head"><div><h3>Minor League Drafts</h3><p>2025 and 2026 selections · historical ownership</p></div><span>{teamDrafts.length}</span></div>{teamDrafts.map(pick=><div className="drafted-prospect" key={`${pick.year}-${pick.overall}`}><b>{pick.year}</b><span>#{pick.overall}</span><a href={playerUrl(pick.player)} target="_blank" rel="noreferrer">{pick.player}</a><em>{pick.current?"Current farm":"Historical pick"}</em></div>)}</section>
     </>}
   </section>;
 }
