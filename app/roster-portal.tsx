@@ -308,7 +308,8 @@ export function RosterPortal({ data }: { data: RosterData }) {
   const [view, setView] = useState<
     "team" | "contracts" | "auction" | "farm" | "rules"
   >("team");
-  const [position, setPosition] = useState("All");
+  const [auctionPosition, setAuctionPosition] = useState("All");
+  const [farmPosition, setFarmPosition] = useState("All");
   const [rosterMode, setRosterMode] = useState<"projected" | "contracted">(
     "projected",
   );
@@ -345,12 +346,22 @@ export function RosterPortal({ data }: { data: RosterData }) {
         ])
         .filter(
           (row) =>
-            position === "All" || String(row.Pos).split(",").includes(position),
+            auctionPosition === "All" ||
+            String(row.Pos).split(",").includes(auctionPosition),
         )
-        .sort(
-          (a, b) => Number(b["2026 FPTS"] ?? 0) - Number(a["2026 FPTS"] ?? 0),
-        ),
-    [data, position],
+        .sort((a, b) => {
+          const priority = (status: string) =>
+            status === "$15 Option Keeper"
+              ? 0
+              : status.includes("probable drop")
+                ? 1
+                : 2;
+          return (
+            priority(a.AuctionStatus) - priority(b.AuctionStatus) ||
+            Number(b["2026 FPTS"] ?? 0) - Number(a["2026 FPTS"] ?? 0)
+          );
+        }),
+    [data, auctionPosition],
   );
   const farm = useMemo(
     () =>
@@ -364,7 +375,8 @@ export function RosterPortal({ data }: { data: RosterData }) {
         )
         .filter(
           (row) =>
-            position === "All" || String(row.Pos).split(",").includes(position),
+            farmPosition === "All" ||
+            String(row.Pos).split(",").includes(farmPosition),
         )
         .sort(
           (a, b) =>
@@ -373,7 +385,7 @@ export function RosterPortal({ data }: { data: RosterData }) {
             Number(String(b["Roster %"] ?? "0").replace("%", "")) -
               Number(String(a["Roster %"] ?? "0").replace("%", "")),
         ),
-    [data, position],
+    [data, farmPosition],
   );
   const positions = ["All", "C", "1B", "2B", "3B", "SS", "OF", "SP", "RP"];
   const contractRows = [...team.committed, ...team.projected];
@@ -522,8 +534,8 @@ export function RosterPortal({ data }: { data: RosterData }) {
             <label>
               Position
               <select
-                value={position}
-                onChange={(e) => setPosition(e.target.value)}
+                value={auctionPosition}
+                onChange={(e) => setAuctionPosition(e.target.value)}
               >
                 {positions.map((p) => (
                   <option key={p}>{p}</option>
@@ -580,8 +592,8 @@ export function RosterPortal({ data }: { data: RosterData }) {
             <label>
               Position
               <select
-                value={position}
-                onChange={(e) => setPosition(e.target.value)}
+                value={farmPosition}
+                onChange={(e) => setFarmPosition(e.target.value)}
               >
                 {positions.map((p) => (
                   <option key={p}>{p}</option>
